@@ -12,6 +12,13 @@ Localization may be set using an optional third parameter. Currently, English (`
 The table is optionally responsive for screens narrower than 768px. At this width, table cells will collapse down onto individual lines, prefixed by the column header text. Column headers will display as buttons at the top of the table. At 450px, the navigation buttons at the bottom of the table will also collapse onto their own lines.
 
 Responsiveness, as well as other options, can be set in the optional `settings` parameter.
+
+## Cloning the repo
+
+```
+git clone ssh://{user}@192.168.86.22:225/volume1/git/smpSortableTable
+```
+
 ## Using a Data Structure
 
 ```
