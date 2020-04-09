@@ -16,7 +16,7 @@ Responsiveness, as well as other options, can be set in the optional `settings` 
 ## Cloning the repo
 
 ```
-git clone ssh://{user}@192.168.86.22:225/volume1/git/smpSortableTable
+git clone ssh://{user}@git.simonpaonessa.com:225/volume1/git/smpSortableTable.git
 ```
 
 ## Using a Data Structure
