@@ -55,16 +55,20 @@
     color: lightgrey;
 }
 
-.smpSortableTable--prev,
-.smpSortableTable--first {
+.smpSortableTable--nav-left {
     float: left;
+}
+
+.smpSortableTable--nav-left > a {
     margin-right: 15px;
 }
 
-.smpSortableTable--next,
-.smpSortableTable--last{
+.smpSortableTable--nav-right {
     float: right;
-    margin-left: 15px;
+}
+
+.smpSortableTable--nav-right > a {
+    margin-right: 15px;
 }
 
 @media (max-width: 768px) {
@@ -106,7 +110,12 @@
 }
 
 @media (max-width: 600px) {
-    .smpSortableTable--processed.responsive + .smpSortableTable--nav > * {
+    .smpSortableTable--nav-left,
+    .smpSortableTable--nav-right {
+        display: inline-block;
+    }
+    .smpSortableTable--processed.responsive + .smpSortableTable--nav > * > a,
+    .smpSortableTable--processed.responsive + .smpSortableTable--nav > span {
         display: inline-block;
         margin: 10px 10px;
         padding: 12px 12px;
@@ -118,10 +127,14 @@
 }
 
 @media (max-width: 450px) {
-    .smpSortableTable--processed.responsive + .smpSortableTable--nav > a {
+    .smpSortableTable--nav-left,
+    .smpSortableTable--nav-right {
+        float: none;
+    }
+    .smpSortableTable--processed.responsive + .smpSortableTable--nav > * > a,
+    .smpSortableTable--processed.responsive + .smpSortableTable--nav > span {
         display: inline-block;
         width: 16vw;
-        float: none;
         margin: 15px 2vw;
         padding: 15px 1vw;
     }
@@ -131,10 +144,13 @@
 }
 
 @media (max-width: 350px) {
-    .smpSortableTable--processed.responsive + .smpSortableTable--nav > a {
+    .smpSortableTable--nav-left,
+    .smpSortableTable--nav-right {
+        display: block;
+    }
+    .smpSortableTable--processed.responsive + .smpSortableTable--nav > * > a {
         display:block;
         width: revert;
-        float:none;
         margin: 15px 1vw;
         padding: 15px 1vw;
     }

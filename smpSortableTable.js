@@ -158,15 +158,15 @@
         // Insert navigation buttons
         $table.after(
             '<div class="smpSortableTable--nav" id="' + tableName + '--nav">' +
-            '<a class="smpSortableTable--nav-links smpSortableTable--first smpSortableTable--disabled" id="' +
+            '<div class="smpSortableTable--nav-left"><a class="smpSortableTable--nav-links smpSortableTable--first smpSortableTable--disabled" id="' +
             tableName + '--first">' + local("first") + '</a>' +
             '<a class="smpSortableTable--nav-links smpSortableTable--prev smpSortableTable--disabled" id="' +
-            tableName + '--prev">' + local("previous") + '</a>' +
+            tableName + '--prev">' + local("previous") + '</a></div>' +
             '<span class="smpSortableTable--counter" id="' + tableName + '--counter"></span>' +
+            '<div class="smpSortableTable--nav-right"><a class="smpSortableTable--nav-links smpSortableTable--next" id="' + tableName + '--next">' +
+            local("next") + '</a>' +
             '<a class="smpSortableTable--nav-links smpSortableTable--last" id="' + tableName + '--last">' +
-            local("last") + '</a>' +
-            '<a class="smpSortableTable--nav-links smpSortableTable--next" id="' + tableName + '--next">' +
-            local("next")+'</a>' + '</div>'
+            local("last") + '</a>' + '</div></div>'
         );
 
         $.each($table.find('th'), function (i, v) {
