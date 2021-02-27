@@ -192,6 +192,7 @@
         if (data.length <= max) {
             $('#' + tableName + '--next').addClass('smpSortableTable--disabled');
             $('#' + tableName + '--last').addClass('smpSortableTable--disabled');
+            $('#' + tableName + '--nav').addClass('smpSortableTable--nav-hidden');
         }
 
         /* Init next/prev */

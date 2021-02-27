@@ -23,6 +23,10 @@
     margin-top: 10px;
 }
 
+.smpSortableTable--nav.smpSortableTable--nav-hidden {
+    display: none;
+}
+
 .smpSortableTable--sortable,
 .smpSortableTable--nav-links {
     cursor: pointer;
