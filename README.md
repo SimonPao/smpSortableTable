@@ -13,12 +13,6 @@ The table is optionally responsive for screens narrower than 768px. At this widt
 
 Responsiveness, as well as other options, can be set in the optional `settings` parameter.
 
-## Cloning the repo
-
-```
-git clone ssh://{user}@git.simonpaonessa.com:225/volume1/git/smpSortableTable.git
-```
-
 ## Using a Data Structure
 
 ```
