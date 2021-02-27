@@ -2,8 +2,9 @@
     $.fn.smpSortableTable = function (data, max, lang, userSettings) {
         // Default settings
         // I'll use this for any future settings so as to not clutter up the function call
-        var settings = {
+        let settings = {
             responsive:true,
+            stateful:true,
             emptyCell:"N/A",
             tr: {
                 class:""
@@ -25,8 +26,8 @@
         // If lang is not defined, then lang is en
         lang = lang || "en" ;
         lang = lang.toLowerCase() ;
-        var local = function(word) {
-            var dict = {
+        let local = function(word) {
+            let dict = {
                 "en": {
                     "of": "Of",
                     "next": "Next",
@@ -75,19 +76,80 @@
             return ( typeof dict[lang][word.toLowerCase()] === 'undefined' ) ? "unknown" : dict[lang][word.toLowerCase()] ;
         } ;
 
+        let changeState = function(state, pop) {
+            if (history.pushState) {
+                let url = window.location.href,
+                    parts = "", query = "", count = 0 ;
+
+                if(pop) { // If called directly after a pop state
+                    return ;
+                }
+
+                if((parts = url.split('?')).length > 1) {
+                    let queryParts = "" ;
+                    url   = parts[0] ;
+                    query = parts[1].split("&") ;
+
+                    for(let item in query) if(query.hasOwnProperty(item))
+                        if((queryParts = query[item].split("=")).length > 1)
+                            if(typeof state[queryParts[0]] === "undefined")
+                                state[queryParts[0]] = queryParts[1] ;
+                }
+
+                for(let name in state) if(state.hasOwnProperty(name))
+                    url += (++count === 1 ? "?" : "&") + `${name}=${state[name]}` ;
+
+                window.history.pushState({ path: url }, "", url);
+            }
+        }
+
+        let getState = function(max, tableName, popped) {
+            let parts = "", query = "", resp = {
+                start: 0, max: max, end: max, pop: popped,
+                sort: "", order: ""
+            } ;
+
+            if(!settings.stateful) return resp ;
+
+            if((parts = window.location.href.split('?')).length > 1) {
+                let queryParts = "" ;
+                query = parts[1].split("&") ;
+
+                for(let item in query) if(query.hasOwnProperty(item))
+                    if((queryParts = query[item].split("=")).length > 1)
+                        switch(queryParts[0]) {
+                            case tableName + "_start":
+                                resp.start = isNaN(parseInt(queryParts[1])) ? 0 : parseInt(queryParts[1]) ;
+                                break ;
+                            case tableName + "_max":
+                                resp.max = isNaN(parseInt(queryParts[1])) ? max : parseInt(queryParts[1]) ;
+                                break ;
+                            case tableName + "_sort":
+                                resp.sort = queryParts[1] ;
+                                break ;
+                            case tableName + "_order":
+                                resp.order = queryParts[1].toLowerCase() === "asc" ? "asc" : "desc" ;
+                                break ;
+                        }
+            }
+
+            resp.end = resp.start + resp.max ;
+            return resp ;
+        }
+
         // Function which creates data structure if HTML table data used
-        var generateData = function($table) {
-            var keys = [] ;
-            var data = [] ;
+        let generateData = function($table) {
+            let keys = [] ;
+            let data = [] ;
 
             $table.find('thead th').each(function(i,v){
                 keys.push($(v).attr('id')) ;
             }) ;
 
             $table.find('tbody tr').each(function(i,v){
-                var $tmp = {} ;
+                let $tmp = {} ;
                 $.each(keys, function(i,v2){
-                    var sort = $($(v).children('td')[i]).data('smp-sort');
+                    let sort = $($(v).children('td')[i]).data('smp-sort');
                     if(typeof sort === "undefined") $tmp[v2] = $(v).children('td')[i].innerHTML;
                     else $tmp[v2] = { "text": $(v).children('td')[i].innerHTML, "sort": sort } ;
                 }) ;
@@ -98,13 +160,13 @@
         };
 
         // Re-render the table data whenever a change is made
-        var renderTable = function (start, end, max, data, tableName) {
-            var returnHTML = '';
-            for (var i = start; i < Math.min(end, max); i++) {
+        let renderTable = function (start, end, max, data, tableName) {
+            let returnHTML = '' ;
+            for (let i = start; i < Math.min(end, max); i++) {
                 returnHTML += '<tr class="' + settings.tr.class + '">';
-                for (var key in data[i]) {
+                for (let key in data[i]) {
                     if(data[i].hasOwnProperty(key)) {
-                        var colText = $('#' + tableName + '_' + key).text() ;
+                        let colText = $('#' + tableName + '_' + key).text() ;
                         if (typeof data[i][key] !== 'object')
                             returnHTML +=
                                 '<td data-smp-content="' + colText + '" class="' + settings.td.class + '">' +
@@ -122,7 +184,7 @@
         };
 
         // The functions that will sort the table when a column header is clicked
-        var sortFns = function (key) {
+        let sortFns = function (key) {
             return {
                 desc: function (a, b) {
                     if (typeof a[key] !== 'object')
@@ -140,28 +202,43 @@
                 }
             }
         };
-        /* SETUP */
-        var $table = $(this);
-        var tableName = $table.attr('id');
-        var index = 0;
 
+        /* SETUP */
+
+        let $table = $(this);
+        let tableName = $table.attr('id');
         max = max < 1 ? 10 : (max || 10) ;
         data = !data ? generateData($table) : data ;
+
+        let state = getState(max, tableName, false);
+
+        if( settings.stateful ) {
+            window.onpopstate = () => {
+                let prevStart = state.start ;
+                state = getState(max, tableName, true);
+                if(state.start < prevStart)
+                    navigate("popLess") ;
+                else
+                    navigate("popMore") ;
+                state.pop = false ;
+            } ;
+        }
+
         $table.addClass('smpSortableTable--processed') ;
         // Make table responsive if user does not explicitly disable it
         if(settings.responsive) {
             $table.addClass('responsive') ;
         }
         $table.find('thead').attr('data-smp-content', local("sort")) ;
-        $table.find('tbody').html(renderTable(0, data.length, max, data, tableName));
+        $table.find('tbody').html(renderTable(state.start, data.length, state.end, data, tableName));
         $table.find('th:not(.smp-not-sortable)').addClass('smpSortableTable--sortable ' + tableName + '--sortable');
         // Insert navigation buttons
         $table.after(
             '<div class="smpSortableTable--nav" id="' + tableName + '--nav">' +
             '<span class="smpSortableTable--counter" id="' + tableName + '--counter"></span>' +
-            '<div class="smpSortableTable--nav-left"><a class="smpSortableTable--nav-links smpSortableTable--first smpSortableTable--disabled" id="' +
+            '<div class="smpSortableTable--nav-left"><a class="smpSortableTable--nav-links smpSortableTable--first" id="' +
             tableName + '--first">' + local("first") + '</a>' +
-            '<a class="smpSortableTable--nav-links smpSortableTable--prev smpSortableTable--disabled" id="' +
+            '<a class="smpSortableTable--nav-links smpSortableTable--prev" id="' +
             tableName + '--prev">' + local("previous") + '</a></div>' +
             '<div class="smpSortableTable--nav-right"><a class="smpSortableTable--nav-links smpSortableTable--next" id="' + tableName + '--next">' +
             local("next") + '</a>' +
@@ -171,7 +248,7 @@
 
         $.each($table.find('th'), function (i, v) {
             // Assign tableName_id ids to all th tags
-            var id = $(v).attr('id');
+            let id = $(v).attr('id');
             $(v).attr('id', tableName + '_' + id);
             // Set data-smp-content attribute of all cells of this column to th text
             //  for table responsiveness on smaller screens
@@ -181,7 +258,7 @@
         /* Init counter */
         if (data.length) {
             $('#' + tableName + '--counter').text(
-                '1 - ' + Math.min(data.length, max) + ' '+local("of").toLowerCase()+' ' + data.length
+                (state.start + 1) + ' - ' + Math.min(data.length, state.end) + ' ' + local("of").toLowerCase() + ' ' + data.length
             );
         } else {
             $('#' + tableName + '--counter').text(local('nothing'));
@@ -189,126 +266,114 @@
             $('#' + tableName + '--last').addClass('smpSortableTable--disabled');
             $table.find('th').removeClass('smpSortableTable--sortable');
         }
-        if (data.length <= max) {
+        if (state.end >= data.length) {
+            $('#' + tableName + '--next').addClass('smpSortableTable--disabled');
+            $('#' + tableName + '--last').addClass('smpSortableTable--disabled');
+        }
+        if (!state.start) {
+            $('#' + tableName + '--prev').addClass('smpSortableTable--disabled');
+            $('#' + tableName + '--first').addClass('smpSortableTable--disabled');
+        }
+        if (data.length <= state.max) {
             $('#' + tableName + '--next').addClass('smpSortableTable--disabled');
             $('#' + tableName + '--last').addClass('smpSortableTable--disabled');
             $('#' + tableName + '--nav').addClass('smpSortableTable--nav-hidden');
         }
 
+        let navigate = (action) => {
+            switch(action) {
+                case "next":
+                    state.start += state.max;
+                    break;
+                case "last":
+                    state.start = Math.trunc(data.length/state.max) * state.max ;
+                    state.start -= state.start < data.length ? 0 : state.max ;
+                    break;
+                case "prev":
+                    state.start -= state.max;
+                    break;
+                case "first":
+                    state.start = 0 ;
+                    break;
+            }
+
+            state.end = state.start + state.max ;
+
+            $table.find('tbody').html(
+                renderTable(state.start, data.length, state.end, data, tableName)
+            ) ;
+
+            $('#' + tableName + '--counter').text(
+                (state.start + 1) + ' - ' + Math.min(data.length, state.end) + ' '+local("of").toLowerCase()+' ' + data.length
+            );
+
+            if( settings.stateful ) {
+                let newState = {} ;
+                newState[tableName + "_start"] = state.start;
+                changeState(newState, state.pop);
+            }
+
+            if(action === "next" || action === "last" || action === "popMore") {
+                $('#' + tableName + '--prev').removeClass('smpSortableTable--disabled');
+                $('#' + tableName + '--first').removeClass('smpSortableTable--disabled');
+                if (state.end >= data.length) {
+                    $('#' + tableName + '--next').addClass('smpSortableTable--disabled');
+                    $('#' + tableName + '--last').addClass('smpSortableTable--disabled');
+                }
+            } else if(action === "prev" || action === "first" || action === "popLess") {
+                $('#' + tableName + '--next').removeClass('smpSortableTable--disabled');
+                $('#' + tableName + '--last').removeClass('smpSortableTable--disabled');
+                if (!state.start) {
+                    $('#' + tableName + '--prev').addClass('smpSortableTable--disabled');
+                    $('#' + tableName + '--first').addClass('smpSortableTable--disabled');
+                }
+            }
+        } ;
+
         /* Init next/prev */
-        if (data.length > max) {
+        if (data.length > state.max) {
             $('#' + tableName + '--next').click(function () {
                 if (!$(this).hasClass('smpSortableTable--disabled')) {
-                    var start = index += max;
-                    var end = start + max;
-                    var size = data.length;
-
-                    $table.find('tbody').html(
-                        renderTable(start, size, end, data, tableName)
-                    );
-
-                    $('#' + tableName + '--counter').text(
-                        (start + 1) + ' - ' + Math.min(size, end) + ' '+local("of").toLowerCase()+' ' + size
-                    );
-
-                    $('#' + tableName + '--prev').removeClass('smpSortableTable--disabled');
-                    $('#' + tableName + '--first').removeClass('smpSortableTable--disabled');
-                    if (end >= size) {
-                      $('#' + tableName + '--next').addClass('smpSortableTable--disabled');
-                      $('#' + tableName + '--last').addClass('smpSortableTable--disabled');
-                    }
+                    navigate("next") ;
                 }
             });
             $('#' + tableName + '--last').click(function () {
                 if (!$(this).hasClass('smpSortableTable--disabled')) {
-                    var size = data.length;
-                    index=Math.trunc(size/max)*max-max;
-                    var start = index += max;
-                    // In case size%max=0, start becames greater than size and has to be fixed.
-                    start-=(start<size)?0:max;
-                    var end = start + max;
-
-                    $table.find('tbody').html(
-                        renderTable(start, size, end, data, tableName)
-                    );
-
-                    $('#' + tableName + '--counter').text(
-                        (start + 1) + ' - ' + Math.min(size, end) + ' '+local("of").toLowerCase()+' ' + size
-                    );
-
-                    $('#' + tableName + '--prev').removeClass('smpSortableTable--disabled');
-                    $('#' + tableName + '--first').removeClass('smpSortableTable--disabled');
-                    if (end >= size) {
-                      $('#' + tableName + '--next').addClass('smpSortableTable--disabled');
-                      $('#' + tableName + '--last').addClass('smpSortableTable--disabled');
-                    }
+                    navigate("last") ;
                 }
             });
             $('#' + tableName + '--prev').click(function () {
                 if (!$(this).hasClass('smpSortableTable--disabled')) {
-                    var start = index -= max;
-                    var end = start + max;
-                    var size = data.length;
-
-                    $table.find('tbody').html(
-                        renderTable(start, size, end, data, tableName)
-                    );
-
-                    $('#' + tableName + '--counter').text(
-                        (start + 1) + ' - ' + Math.min(size, end) + ' '+local("of").toLowerCase()+' ' + size
-                    );
-
-                    $('#' + tableName + '--next').removeClass('smpSortableTable--disabled');
-                    $('#' + tableName + '--last').removeClass('smpSortableTable--disabled');
-                    if (!start) {
-                      $('#' + tableName + '--prev').addClass('smpSortableTable--disabled');
-                      $('#' + tableName + '--first').addClass('smpSortableTable--disabled');
-                    }
+                    navigate("prev") ;
                 }
             });
             $('#' + tableName + '--first').click(function () {
                 if (!$(this).hasClass('smpSortableTable--disabled')) {
-                    index=max;
-                    var start = index -= max;
-                    var end = start + max;
-                    var size = data.length;
-
-                    $table.find('tbody').html(
-                        renderTable(start, size, end, data, tableName)
-                    );
-
-                    $('#' + tableName + '--counter').text(
-                        (start + 1) + ' - ' + Math.min(size, end) + ' '+local("of").toLowerCase()+' ' + size
-                    );
-
-                    $('#' + tableName + '--next').removeClass('smpSortableTable--disabled');
-                    $('#' + tableName + '--last').removeClass('smpSortableTable--disabled');
-                    if (!start) {
-                      $('#' + tableName + '--prev').addClass('smpSortableTable--disabled');
-                      $('#' + tableName + '--first').addClass('smpSortableTable--disabled');
-                    }
+                    navigate("first") ;
                 }
             });
         }
 
         /* Init sorting*/
         $('.' + tableName + '--sortable').click(function () {
-            var direction = $(this).hasClass('asc') ? 'desc' : 'asc';
-            var colName = $(this).attr('id').replace(tableName + '_', '');
+            let direction = $(this).hasClass('asc') ? 'desc' : 'asc';
+            let colName = $(this).attr('id').replace(tableName + '_', '');
             $('.' + tableName + '--sortable').removeClass('desc asc');
-            index = 0;
             data.sort(sortFns(colName)[direction]);
             $table.find('tbody').html(
-                renderTable(0, data.length, max, data, tableName)
+                renderTable(state.start, data.length, state.end, data, tableName)
             );
-            $(this).addClass(direction);
-            $('#' + tableName + '--prev').addClass('smpSortableTable--disabled');
-            $('#' + tableName + '--first').addClass('smpSortableTable--disabled');
-            if (data.length > max) {
-                $('#' + tableName + '--next').removeClass('smpSortableTable--disabled');
-                $('#' + tableName + '--last').removeClass('smpSortableTable--disabled');
+            if( settings.stateful ) {
+                let newState = {} ;
+                newState[tableName + "_sort"]  = colName;
+                newState[tableName + "_order"] = direction;
+                changeState(newState, state.pop);
             }
-            $('#' + tableName + '--counter').text('1 - ' + Math.min(data.length, max) + ' '+local("of").toLowerCase()+' ' + data.length);
+            $(this).addClass(direction);
         });
+
+        if(state.sort !== "") {
+            $('#' + tableName + '_' + state.sort).addClass(state.order === 'asc' ? 'desc' : 'asc').trigger("click") ;
+        }
     };
 })(jQuery) ;
