@@ -131,15 +131,16 @@
     .smpSortableTable--nav-right {
         float: none;
     }
-    .smpSortableTable--processed.responsive + .smpSortableTable--nav > * > a,
-    .smpSortableTable--processed.responsive + .smpSortableTable--nav > span {
+    .smpSortableTable--processed.responsive + .smpSortableTable--nav > * > a {
         display: inline-block;
         width: 16vw;
         margin: 15px 2vw;
         padding: 15px 1vw;
     }
     .smpSortableTable--processed.responsive + .smpSortableTable--nav > span {
-        display: none;
+        display: block;
+        margin: 0;
+        padding: 0;
     }
 }
 
