@@ -218,8 +218,11 @@
                 state = getState(max, tableName, true);
                 if(state.start < prevStart)
                     navigate("popLess") ;
-                else
+                else if(state.start > prevStart)
                     navigate("popMore") ;
+                else if(state.sort !== "") {
+                    $('#' + tableName + '_' + state.sort).addClass(state.order === 'asc' ? 'desc' : 'asc').trigger("click") ;
+                }
                 state.pop = false ;
             } ;
         }
