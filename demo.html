@@ -1,4 +1,4 @@
-<html>
+<html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>SMP Sortable Table jQuery Plugin</title>
@@ -293,9 +293,10 @@
         };
 
         $(document).ready(function () {
-            let $inp_rows = $('#inp_rows') ;
-            let $inp_lang = $('#inp_lang') ;
-            let $inp_resp = $('#inp_resp') ;
+            let $inp_rows  = $('#inp_rows') ;
+            let $inp_lang  = $('#inp_lang') ;
+            let $inp_resp  = $('#inp_resp') ;
+            let $inp_state = $('#inp_state') ;
             let params = window.location.search.substring(1).split('&') ;
             for(let key in params) {
                 let tmp = params[key].split('=') ;
@@ -304,28 +305,32 @@
             const initRows = params.rows ? parseInt(params.rows) : 10 ;
             const initLang = params.lang ? params.lang : "en" ;
             const initResp = !(params.resp === 'false') ;
+            const initState = !(params.state === 'false') ;
             $inp_rows.val(initRows) ;
             $inp_lang.val(initLang) ;
             $inp_resp.prop('checked', initResp) ;
+            $inp_state.prop('checked', initState) ;
 
             if(params.data === 'ds') {
-                $('#people-table').smpSortableTable(people.data, initRows, initLang, {responsive: initResp} );
+                $('#people-table').smpSortableTable(people.data, initRows, initLang, {responsive: initResp, stateful: initState} );
             } else {
-                $('#people-table').smpSortableTable(false, initRows, initLang, {responsive: initResp} );
+                $('#people-table').smpSortableTable(false, initRows, initLang, {responsive: initResp, stateful: initState} );
             }
 
             $('#btn_ds').click(function(){
                 let rows = !!$inp_rows.val() ? $inp_rows.val() : 10 ;
                 let lang = !!$inp_lang.val() ? $inp_lang.val() : "en" ;
                 let resp = $inp_resp.prop('checked') ;
-                window.location.search = '?data=ds&rows=' + rows + '&lang=' + lang + '&resp=' + resp ;
+                let state = $inp_state.prop('checked') ;
+                window.location.search = '?data=ds&rows=' + rows + '&lang=' + lang + '&resp=' + resp + '&state=' + state ;
             }) ;
 
             $('#btn_td').click(function(){
                 let rows = !!$inp_rows.val() ? $inp_rows.val() : 10 ;
                 let lang = !!$inp_lang.val() ? $inp_lang.val() : "en" ;
                 let resp = $inp_resp.prop('checked') ;
-                window.location.search = '?data=td&rows=' + rows + '&lang=' + lang + '&resp=' + resp ;
+                let state = $inp_state.prop('checked') ;
+                window.location.search = '?data=td&rows=' + rows + '&lang=' + lang + '&resp=' + resp + '&state=' + state ;
             }) ;
         });
     </script>
@@ -660,6 +665,8 @@
 <span class="hidden-lg"><br/><br/></span>
 <label for="inp_resp">Responsive</label>
 <input id="inp_resp" type="checkbox" checked />
+<label for="inp_state">Stateful</label>
+<input id="inp_state" type="checkbox" checked />
 <span class="hidden-lg"><br/><br/></span>
 <button id="btn_ds">Render Using Data Structure</button>
 <span class="hidden-lg"><br/><br/></span>

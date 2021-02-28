@@ -41,6 +41,7 @@ Responsiveness, as well as other options, can be set in the optional `settings` 
     let language = "en" ;
     let settings = {
         responsive:true, // Make table responsive at 768px (default: true)
+        stateful:true,   // Whether to track table state in URL (default: true)
         emptyCell:"N/A", // Text to display in empty cells (default: "N/A")
         tr: {
             class:"some-class" // Additional row class(es)
@@ -76,6 +77,7 @@ Responsiveness, as well as other options, can be set in the optional `settings` 
     let language = "en" ;
     let settings = {
         responsive:true, // Make table responsive at 768px (default: true)
+        stateful:true,   // Whether to track table state in URL (default: true)
         emptyCell:"N/A", // Text to display in empty cells (default: "N/A")
         tr: {
             class:"some-class" // Additional row class(es)
